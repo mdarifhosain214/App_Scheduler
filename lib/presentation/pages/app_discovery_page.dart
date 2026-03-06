@@ -171,9 +171,7 @@ class AppDiscoveryPage extends ConsumerWidget {
     ref.read(searchQueryProvider.notifier).state = '';
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(
-        builder: (_) => ScheduleFormPage(selectedApp: app),
-      ),
+      MaterialPageRoute(builder: (_) => ScheduleFormPage(selectedApp: app)),
     );
   }
 }

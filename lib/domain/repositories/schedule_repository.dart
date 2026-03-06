@@ -23,6 +23,10 @@ abstract class ScheduleRepository {
   /// If [excludeId] is provided, that schedule is ignored (for editing).
   Future<Schedule?> findConflict(DateTime dateTime, {int? excludeId});
 
+  /// Find an active schedule for a given package name.
+  /// Returns the schedule if found, null otherwise.
+  Future<Schedule?> findActiveByPackageName(String packageName);
+
   /// Insert a history record.
   Future<void> insertHistory(ScheduleHistory history);
 

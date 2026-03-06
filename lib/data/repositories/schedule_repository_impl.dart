@@ -17,6 +17,7 @@ class ScheduleRepositoryImpl implements ScheduleRepository {
     final db = await _localDatabase.database;
     final maps = await db.query(
       AppConstants.schedulesTable,
+      where: 'is_active = 1',
       orderBy: 'scheduled_date_time ASC',
     );
     return maps.map((m) => ScheduleModel.fromMap(m).toEntity()).toList();
@@ -101,6 +102,19 @@ class ScheduleRepositoryImpl implements ScheduleRepository {
   }
 
   @override
+  Future<Schedule?> findActiveByPackageName(String packageName) async {
+    final db = await _localDatabase.database;
+    final maps = await db.query(
+      AppConstants.schedulesTable,
+      where: 'package_name = ? AND is_active = 1',
+      whereArgs: [packageName],
+      limit: 1,
+    );
+    if (maps.isEmpty) return null;
+    return ScheduleModel.fromMap(maps.first).toEntity();
+  }
+
+  @override
   Future<void> insertHistory(ScheduleHistory history) async {
     final db = await _localDatabase.database;
     final model = ScheduleHistoryModel.fromEntity(history);
@@ -114,9 +128,7 @@ class ScheduleRepositoryImpl implements ScheduleRepository {
       AppConstants.historyTable,
       orderBy: 'executed_at DESC',
     );
-    return maps
-        .map((m) => ScheduleHistoryModel.fromMap(m).toEntity())
-        .toList();
+    return maps.map((m) => ScheduleHistoryModel.fromMap(m).toEntity()).toList();
   }
 
   @override

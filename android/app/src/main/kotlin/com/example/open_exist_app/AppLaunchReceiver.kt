@@ -18,7 +18,8 @@ import java.util.Locale
 /**
  * BroadcastReceiver that fires when a scheduled alarm triggers.
  * Launches the target app using applicationContext (no Activity needed),
- * updates the SQLite database, and shows a notification.
+ * updates the SQLite database, and stores pending notification data
+ * in SharedPreferences for Flutter to pick up and display.
  */
 class AppLaunchReceiver : BroadcastReceiver() {
 
@@ -27,6 +28,7 @@ class AppLaunchReceiver : BroadcastReceiver() {
         private const val CHANNEL_ID = "app_scheduler_channel"
         private const val CHANNEL_NAME = "App Scheduler"
         private const val DB_NAME = "app_scheduler.db"
+        private const val PREFS_NAME = "app_scheduler_prefs"
     }
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -65,8 +67,11 @@ class AppLaunchReceiver : BroadcastReceiver() {
             Log.e(TAG, "Failed to update database: ${e.message}")
         }
 
-        // Show notification
+        // Show notification instantly (no delay)
         showNotification(context, scheduleId, appName, launched)
+
+        // Also store for Flutter UI refresh
+        storePendingNotification(context, scheduleId, appName, launched)
     }
 
     private fun updateDatabase(
@@ -105,6 +110,9 @@ class AppLaunchReceiver : BroadcastReceiver() {
         }
     }
 
+    /**
+     * Show notification immediately when alarm fires.
+     */
     private fun showNotification(
         context: Context,
         scheduleId: Int,
@@ -130,7 +138,7 @@ class AppLaunchReceiver : BroadcastReceiver() {
         val body = if (launched) {
             "$appName was launched as scheduled."
         } else {
-            "Failed to launch $appName. The app may have been uninstalled."
+            "Failed to launch $appName."
         }
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
@@ -142,5 +150,22 @@ class AppLaunchReceiver : BroadcastReceiver() {
             .build()
 
         notificationManager.notify(scheduleId, notification)
+    }
+
+    /**
+     * Stores notification data in SharedPreferences for Flutter UI refresh.
+     */
+    private fun storePendingNotification(
+        context: Context,
+        scheduleId: Int,
+        appName: String,
+        launched: Boolean
+    ) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val existing = prefs.getString("pending_notifications", "") ?: ""
+        val entry = "$scheduleId|$appName|$launched"
+        val updated = if (existing.isEmpty()) entry else "$existing,$entry"
+        prefs.edit().putString("pending_notifications", updated).apply()
+        Log.d(TAG, "Stored pending notification: $entry")
     }
 }

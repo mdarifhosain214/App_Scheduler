@@ -101,6 +101,22 @@ class ScheduleNotifier extends StateNotifier<AsyncValue<List<Schedule>>> {
     await _loadSchedules();
     // Also refresh history
     _ref.invalidate(scheduleHistoryProvider);
+    // Clear any pending notification data (native already showed the notification)
+    await _clearPendingNotifications();
+  }
+
+  /// Clear pending notification data stored by native AppLaunchReceiver.
+  /// The native side already shows the notification instantly,
+  /// so we only need to clear the SharedPreferences here.
+  Future<void> _clearPendingNotifications() async {
+    try {
+      final pending = await AlarmService.getPendingNotifications();
+      if (pending.isNotEmpty) {
+        await AlarmService.clearPendingNotifications();
+      }
+    } catch (_) {
+      // Ignore errors
+    }
   }
 
   Future<ScheduleResult> createSchedule(Schedule schedule) async {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/theme/app_theme.dart';
 import 'core/services/alarm_service.dart';
+import 'core/services/notification_service.dart';
 import 'presentation/pages/home_page.dart';
 
 Future<void> main() async {
@@ -9,6 +10,7 @@ Future<void> main() async {
 
   // Initialize services
   await AlarmService.initialize();
+  await NotificationService.initialize();
 
   runApp(const ProviderScope(child: AppSchedulerApp()));
 }

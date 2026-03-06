@@ -45,4 +45,27 @@ class AlarmService {
       throw Exception('Failed to cancel alarm: ${e.message}');
     }
   }
+
+  /// Get pending notifications stored by native AppLaunchReceiver.
+  /// Returns a list of maps with keys: scheduleId, appName, success.
+  static Future<List<Map<String, dynamic>>> getPendingNotifications() async {
+    try {
+      final result = await _channel.invokeMethod<List<dynamic>>(
+        'getPendingNotifications',
+      );
+      if (result == null || result.isEmpty) return [];
+      return result.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+    } on PlatformException {
+      return [];
+    }
+  }
+
+  /// Clear all pending notifications from native storage.
+  static Future<void> clearPendingNotifications() async {
+    try {
+      await _channel.invokeMethod('clearPendingNotifications');
+    } on PlatformException {
+      // Ignore
+    }
+  }
 }

@@ -73,6 +73,36 @@ class MainActivity : FlutterActivity() {
                         result.error("CANCEL_ERROR", e.message, null)
                     }
                 }
+                "getPendingNotifications" -> {
+                    try {
+                        val prefs = applicationContext.getSharedPreferences("app_scheduler_prefs", MODE_PRIVATE)
+                        val pending = prefs.getString("pending_notifications", "") ?: ""
+                        if (pending.isEmpty()) {
+                            result.success(listOf<Map<String, Any>>())
+                        } else {
+                            val notifications = pending.split(",").map { entry ->
+                                val parts = entry.split("|")
+                                mapOf(
+                                    "scheduleId" to (parts.getOrNull(0)?.toIntOrNull() ?: 0),
+                                    "appName" to (parts.getOrNull(1) ?: ""),
+                                    "success" to (parts.getOrNull(2) == "true")
+                                )
+                            }
+                            result.success(notifications)
+                        }
+                    } catch (e: Exception) {
+                        result.error("NOTIFICATION_ERROR", e.message, null)
+                    }
+                }
+                "clearPendingNotifications" -> {
+                    try {
+                        val prefs = applicationContext.getSharedPreferences("app_scheduler_prefs", MODE_PRIVATE)
+                        prefs.edit().remove("pending_notifications").apply()
+                        result.success(true)
+                    } catch (e: Exception) {
+                        result.error("CLEAR_ERROR", e.message, null)
+                    }
+                }
                 else -> result.notImplemented()
             }
         }
